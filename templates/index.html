@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Transition Deployment Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -140,12 +140,12 @@
       const list = await r.json();
       tableBody.innerHTML = list.map(n => `
         <tr>
-          <td><strong>${escapeHtml(n.nominee)}</strong></td>
-          <td>${escapeHtml(n.vertical)}</td>
-          <td><span class="exp-badge ${(n.experience || '').toLowerCase()}">${escapeHtml(n.experience)}</span></td>
-          <td>${escapeHtml(n.title)}</td>
-          <td>${escapeHtml(n.current_account)}</td>
-          <td class="summary-cell">${escapeHtml(n.summary || '—')}</td>
+          <td data-label="Nominee"><strong>${escapeHtml(n.nominee)}</strong></td>
+          <td data-label="Vertical">${escapeHtml(n.vertical)}</td>
+          <td data-label="Experience"><span class="exp-badge ${(n.experience || '').toLowerCase()}">${escapeHtml(n.experience)}</span></td>
+          <td data-label="Title">${escapeHtml(n.title)}</td>
+          <td data-label="Current Account">${escapeHtml(n.current_account)}</td>
+          <td data-label="Summary" class="summary-cell">${escapeHtml(n.summary || '—')}</td>
         </tr>
       `).join('');
       emptyState.classList.toggle('hidden', list.length > 0);
