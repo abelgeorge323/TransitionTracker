@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transition Deployment Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-brand">
+        {% if logo_url %}
+        <img src="{{ logo_url }}" alt="" class="header-logo">
+        {% endif %}
+        <h1>Transition Deployment Tracker</h1>
+      </div>
+    </header>
+
+    <div class="dashboard" id="dashboard">
+      <section class="snapshot" id="snapshot">
+        <div class="stat-card"><span class="value" id="statTotal">0</span><span class="label">Total Nominees</span></div>
+        <div class="stat-card expert"><span class="value" id="statExpert">0</span><span class="label">Experts</span></div>
+        <div class="stat-card intermediate"><span class="value" id="statIntermediate">0</span><span class="label">Intermediate</span></div>
+        <div class="stat-card novice"><span class="value" id="statNovice">0</span><span class="label">Novice</span></div>
+        <div class="stat-card"><span class="value" id="statVerticals">0</span><span class="label">Verticals</span></div>
+      </section>
+
+      <h2 class="section-title">Deployment Grid — Vertical × Experience</h2>
+      <div class="grid-wrap">
+        <table class="deployment-grid" id="deploymentGrid">
+          <thead>
+            <tr>
+              <th>Vertical</th>
+              <th>Novice</th>
+              <th>Intermediate</th>
+              <th>Expert</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="gridBody"></tbody>
+        </table>
+      </div>
+
+      <h2 class="section-title">Filter & Placement</h2>
+      <div class="filters">
+        <select id="filterVertical">
+          <option value="">All Verticals</option>
+        </select>
+        <select id="filterExperience">
+          <option value="">All Experience</option>
+          <option value="Expert">Expert</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Novice">Novice</option>
+        </select>
+        <select id="filterTitle">
+          <option value="">All Titles</option>
+        </select>
+        <input type="search" id="filterSearch" placeholder="Search name...">
+        <button type="button" class="btn-export" id="btnExport">Export CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table class="placement-table" id="placementTable">
+          <thead>
+            <tr>
+              <th>Nominee</th>
+              <th>Vertical</th>
+              <th>Experience</th>
+              <th>Title</th>
+              <th>Current Account</th>
+              <th>Summary</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState">No nominees match filters.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const dashboard = document.getElementById('dashboard');
+    const statTotal = document.getElementById('statTotal');
+    const statExpert = document.getElementById('statExpert');
+    const statIntermediate = document.getElementById('statIntermediate');
+    const statNovice = document.getElementById('statNovice');
+    const statVerticals = document.getElementById('statVerticals');
+    const gridBody = document.getElementById('gridBody');
+    const tableBody = document.getElementById('tableBody');
+    const emptyState = document.getElementById('emptyState');
+    const filterVertical = document.getElementById('filterVertical');
+    const filterExperience = document.getElementById('filterExperience');
+    const filterTitle = document.getElementById('filterTitle');
+    const filterSearch = document.getElementById('filterSearch');
+    const btnExport = document.getElementById('btnExport');
+
+    function showDashboard(show) {
+      dashboard.classList.toggle('hidden', !show);
+    }
+
+    function buildParams() {
+      const p = new URLSearchParams();
+      if (filterVertical.value) p.set('vertical', filterVertical.value);
+      if (filterExperience.value) p.set('experience', filterExperience.value);
+      if (filterTitle.value) p.set('title', filterTitle.value);
+      if (filterSearch.value.trim()) p.set('search', filterSearch.value.trim());
+      return p.toString();
+    }
+
+    async function loadStats() {
+      const r = await fetch('/api/stats');
+      const s = await r.json();
+      statTotal.textContent = s.total;
+      statExpert.textContent = s.expert;
+      statIntermediate.textContent = s.intermediate;
+      statNovice.textContent = s.novice;
+      statVerticals.textContent = s.verticals;
+    }
+
+    async function loadGrid() {
+      const r = await fetch('/api/grid');
+      const rows = await r.json();
+      gridBody.innerHTML = rows.map(row => `
+        <tr>
+          <td>${escapeHtml(row.vertical)}</td>
+          <td class="${row.novice === 0 ? 'thin' : ''}">${row.novice}</td>
+          <td class="${row.intermediate === 0 ? 'thin' : ''}">${row.intermediate}</td>
+          <td class="${row.expert === 0 ? 'thin' : ''}">${row.expert}</td>
+          <td class="total-col">${row.total}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadNominees() {
+      const q = buildParams();
+      const r = await fetch('/api/nominees?' + q);
+      const list = await r.json();
+      tableBody.innerHTML = list.map(n => `
+        <tr>
+          <td><strong>${escapeHtml(n.nominee)}</strong></td>
+          <td>${escapeHtml(n.vertical)}</td>
+          <td><span class="exp-badge ${(n.experience || '').toLowerCase()}">${escapeHtml(n.experience)}</span></td>
+          <td>${escapeHtml(n.title)}</td>
+          <td>${escapeHtml(n.current_account)}</td>
+          <td class="summary-cell">${escapeHtml(n.summary || '—')}</td>
+        </tr>
+      `).join('');
+      emptyState.classList.toggle('hidden', list.length > 0);
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    async function refresh() {
+      await Promise.all([loadStats(), loadGrid(), loadNominees()]);
+    }
+
+    async function populateFilters() {
+      const r = await fetch('/api/nominees');
+      const list = await r.json();
+      const verticals = [...new Set(list.map(n => n.vertical).filter(Boolean))].sort();
+      const titles = [...new Set(list.map(n => n.title).filter(Boolean))].sort();
+      filterVertical.innerHTML = '<option value="">All Verticals</option>' + verticals.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      filterTitle.innerHTML = '<option value="">All Titles</option>' + titles.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    }
+
+    filterVertical.addEventListener('change', loadNominees);
+    filterExperience.addEventListener('change', loadNominees);
+    filterTitle.addEventListener('change', loadNominees);
+    filterSearch.addEventListener('input', debounce(loadNominees, 300));
+
+    btnExport.addEventListener('click', () => {
+      window.location.href = '/api/export?' + buildParams();
+    });
+
+    function debounce(fn, ms) {
+      let t;
+      return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+    }
+
+    showDashboard(true);
+    populateFilters().then(refresh);
+  </script>
+</body>
+</html>
