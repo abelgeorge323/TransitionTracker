@@ -18,11 +18,15 @@ NOMINEES = []
 
 def _load_csv_from_data():
     """Load CSV from Data folder (works for both local and Heroku when CSV is in repo)."""
-    sample_path = os.path.join(os.path.dirname(__file__), "Data", "Transition Team Member Nomination Form(Sheet1).csv")
-    if os.path.isfile(sample_path):
-        with open(sample_path, encoding="utf-8-sig") as f:
-            global NOMINEES
-            NOMINEES = parse_csv(f.read())
+    data_dir = os.path.join(os.path.dirname(__file__), "Data")
+    # Prefer new sheet with (1), fallback to original
+    for name in ("Transition Team Member Nomination Form(Sheet1) (1).csv", "Transition Team Member Nomination Form(Sheet1).csv"):
+        path = os.path.join(data_dir, name)
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8-sig") as f:
+                global NOMINEES
+                NOMINEES = parse_csv(f.read())
+            return
 
 
 def normalize_experience(raw: str) -> str:
@@ -124,14 +128,7 @@ def serve_assets(filename):
 
 
 def _get_logo_url():
-    """Return logo URL if it exists (assets first, then static fallback)."""
-    assets_dir = os.path.join(os.path.dirname(__file__), "assets")
-    for name in ("logo.png", "logo.svg", "logo.jpg", "logo.webp"):
-        if os.path.isfile(os.path.join(assets_dir, name)):
-            return f"/assets/{name}"
-    static_logo = os.path.join(os.path.dirname(__file__), "static", "logo.svg")
-    if os.path.isfile(static_logo):
-        return "/static/logo.svg"
+    """Return logo URL if it exists. Returns None (no logo displayed)."""
     return None
 
 
