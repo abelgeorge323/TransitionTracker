@@ -18,15 +18,22 @@ NOMINEES = []
 
 def _load_csv_from_data():
     """Load CSV from Data folder (works for both local and Heroku when CSV is in repo)."""
-    data_dir = os.path.join(os.path.dirname(__file__), "Data")
-    # Prefer newest sheet (2), then (1), then original
-    for name in ("Transition Team Member Nomination Form(Sheet1) (2).csv", "Transition Team Member Nomination Form(Sheet1) (1).csv", "Transition Team Member Nomination Form(Sheet1).csv"):
-        path = os.path.join(data_dir, name)
-        if os.path.isfile(path):
-            with open(path, encoding="utf-8-sig") as f:
-                global NOMINEES
-                NOMINEES = parse_csv(f.read())
-            return
+    global NOMINEES
+    names = ("Transition Team Member Nomination Form(Sheet1) (2).csv", "Transition Team Member Nomination Form(Sheet1) (1).csv", "Transition Team Member Nomination Form(Sheet1).csv")
+    # Try paths: next to app.py, then cwd/Data
+    for data_dir in (os.path.join(os.path.dirname(os.path.abspath(__file__)), "Data"), os.path.join(os.getcwd(), "Data")):
+        if not os.path.isdir(data_dir):
+            continue
+        for name in names:
+            path = os.path.join(data_dir, name)
+            if os.path.isfile(path):
+                try:
+                    with open(path, encoding="utf-8-sig") as f:
+                        NOMINEES = parse_csv(f.read())
+                    if NOMINEES:
+                        return
+                except Exception as e:
+                    print(f"Error loading {path}: {e}")
 
 
 def normalize_experience(raw: str) -> str:
@@ -102,7 +109,8 @@ def get_stats(nominees: list) -> dict:
     intermediate = sum(1 for n in nominees if n["experience"] == "Intermediate")
     novice = sum(1 for n in nominees if n["experience"] == "Novice")
     unknown = sum(1 for n in nominees if n["experience"] == "Unknown")
-    verticals = len(set(n["vertical"] for n in nominees if n["vertical"]))
+    verticals_set = set(n["vertical"] for n in nominees if n.get("vertical"))
+    verticals = len(verticals_set)
     self_nominated = [n["nominee"] for n in nominees if n.get("is_self_nominated")]
     titles = list(set(n["title"] for n in nominees if n.get("title")))
     return {
@@ -205,6 +213,35 @@ def upload():
         return jsonify({"error": str(e)}), 400
 
 
+@app.route("/api/debug")
+def debug():
+    """Return debug info about CSV loading (for troubleshooting 0 counts)."""
+    base = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(base, "Data")
+    exists = os.path.isdir(data_dir)
+    files = []
+    if exists:
+        try:
+            files = [f for f in os.listdir(data_dir) if f.lower().endswith(".csv")]
+        except OSError:
+            pass
+    return jsonify({
+        "nominee_count": len(NOMINEES),
+        "data_dir": data_dir,
+        "data_dir_exists": exists,
+        "csv_files": files,
+        "cwd": os.getcwd(),
+    })
+
+
+@app.route("/api/reload")
+def reload_data():
+    """Force reload CSV from Data folder (useful when initial load fails)."""
+    global NOMINEES
+    _load_csv_from_data()
+    return jsonify({"count": len(NOMINEES), "message": f"Loaded {len(NOMINEES)} nominees."})
+
+
 @app.route("/api/stats")
 def stats():
     s = get_stats(NOMINEES)
@@ -234,10 +271,11 @@ def export():
     experience = request.args.get("experience", "")
     title = request.args.get("title", "")
     search = request.args.get("search", "")
-    filtered = filter_nominees(NOMINEES, vertical, experience, title, search)
+    self_only = request.args.get("self_nominated") == "1"
+    filtered = filter_nominees(NOMINEES, vertical, experience, title, search, self_only)
     output = io.StringIO()
     w = csv.writer(output)
-    w.writerow(["Nominee", "Vertical", "Experience", "Title", "Current Account", "Years in Role", "Summary"])
+    w.writerow(["Nominee", "Vertical", "Experience", "Title", "Current Account", "Years in Role", "Self-Nominated", "Summary"])
     for n in filtered:
         w.writerow([
             n["nominee"],

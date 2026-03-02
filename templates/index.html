@@ -120,6 +120,10 @@
     const filterSearch = document.getElementById('filterSearch');
     const filterSelfNominated = document.getElementById('filterSelfNominated');
     const btnExport = document.getElementById('btnExport');
+    const factSelfCount = document.getElementById('factSelfCount');
+    const factSelfList = document.getElementById('factSelfList');
+    const factVerticalsList = document.getElementById('factVerticalsList');
+    const factTitlesList = document.getElementById('factTitlesList');
 
     function showDashboard(show) {
       dashboard.classList.toggle('hidden', !show);
@@ -143,6 +147,11 @@
       statIntermediate.textContent = s.intermediate;
       statNovice.textContent = s.novice;
       statVerticals.textContent = s.verticals;
+      if (factSelfCount) factSelfCount.textContent = s.self_nominated_count ?? 0;
+      if (factSelfList) factSelfList.textContent = (s.self_nominated || []).join(', ') || '—';
+      if (factVerticalsList) factVerticalsList.textContent = (s.verticals_list || []).join(', ') || '—';
+      if (factTitlesList) factTitlesList.textContent = (s.titles || []).join(', ') || '—';
+      return s;
     }
 
     async function loadGrid() {
@@ -188,6 +197,18 @@
       await Promise.all([loadStats(), loadGrid(), loadNominees()]);
     }
 
+    async function refreshWithRetry() {
+      await refresh();
+      const r = await fetch('/api/stats');
+      const s = await r.json();
+      if (s.total === 0) {
+        try {
+          await fetch('/api/reload');
+          await refresh();
+        } catch (e) { /* ignore */ }
+      }
+    }
+
     async function populateFilters() {
       const r = await fetch('/api/nominees');
       const list = await r.json();
@@ -213,7 +234,7 @@
     }
 
     showDashboard(true);
-    populateFilters().then(refresh);
+    populateFilters().then(refreshWithRetry);
   </script>
 </body>
 </html>
