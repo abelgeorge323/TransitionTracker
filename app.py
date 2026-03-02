@@ -43,6 +43,33 @@ def normalize_experience(raw: str) -> str:
     return "Unknown"
 
 
+def _name_to_email_prefix(name: str) -> str:
+    """Convert name to expected email prefix (e.g. James Hancock -> jhancock)."""
+    name = (name or "").strip()
+    if not name:
+        return ""
+    parts = name.split()
+    if not parts:
+        return ""
+    first = parts[0].lower()
+    last = parts[-1].lower().split("-")[0] if parts else ""  # take first part of hyphenated last
+    return (first[0] if first else "") + last
+
+
+def _is_self_nominated(nominee: str, email: str) -> bool:
+    """Self-nominated = metadata email matches the nominee's name (email prefix identifies the person)."""
+    if not nominee or not email or "@" not in email:
+        return False
+    nominee_clean = nominee.strip()
+    if " - " in nominee_clean:
+        nominee_clean = nominee_clean.split(" - ", 1)[-1].strip()
+    if "myself" in nominee_clean.lower():
+        nominee_clean = nominee_clean.replace("Myself", "").replace("myself", "").strip().lstrip("- ")
+    expected = _name_to_email_prefix(nominee_clean)
+    actual = email.split("@")[0].lower()
+    return expected == actual or actual.startswith(expected)
+
+
 def parse_csv(content: str) -> list[dict]:
     """Parse Microsoft Forms CSV export into normalized nominee records."""
     reader = csv.DictReader(io.StringIO(content))
@@ -51,6 +78,8 @@ def parse_csv(content: str) -> list[dict]:
         nominee = row.get("Who are you Nominating", "").strip()
         if not nominee:
             continue
+        nominator = (row.get("Name", "") or "").strip()
+        email = (row.get("Email", "") or "").strip()
         rows.append({
             "id": row.get("Id", ""),
             "nominee": nominee,
@@ -60,8 +89,9 @@ def parse_csv(content: str) -> list[dict]:
             "years_in_role": (row.get("Years in Current Role", "") or "").strip(),
             "experience": normalize_experience(row.get("Experience Level", "")),
             "summary": (row.get("Summary of Prior Transition Experience", "") or "").strip(),
-            "nominator_name": (row.get("Name", "") or "").strip(),
-            "nominator_email": (row.get("Email", "") or "").strip(),
+            "nominator_name": nominator,
+            "nominator_email": email,
+            "is_self_nominated": _is_self_nominated(nominee, email),
         })
     return rows
 
@@ -73,6 +103,8 @@ def get_stats(nominees: list) -> dict:
     novice = sum(1 for n in nominees if n["experience"] == "Novice")
     unknown = sum(1 for n in nominees if n["experience"] == "Unknown")
     verticals = len(set(n["vertical"] for n in nominees if n["vertical"]))
+    self_nominated = [n["nominee"] for n in nominees if n.get("is_self_nominated")]
+    titles = list(set(n["title"] for n in nominees if n.get("title")))
     return {
         "total": len(nominees),
         "expert": experts,
@@ -80,6 +112,10 @@ def get_stats(nominees: list) -> dict:
         "novice": novice,
         "unknown": unknown,
         "verticals": verticals,
+        "self_nominated": self_nominated,
+        "self_nominated_count": len(self_nominated),
+        "titles": sorted(titles),
+        "verticals_list": sorted(verticals_set),
     }
 
 
@@ -106,7 +142,7 @@ def get_grid(nominees: list) -> dict:
     return result
 
 
-def filter_nominees(nominees: list, vertical: str, experience: str, title: str, search: str) -> list:
+def filter_nominees(nominees: list, vertical: str, experience: str, title: str, search: str, self_only: bool = False) -> list:
     """Apply filters to nominee list."""
     out = nominees
     if vertical:
@@ -118,6 +154,8 @@ def filter_nominees(nominees: list, vertical: str, experience: str, title: str, 
     if search:
         q = search.lower()
         out = [n for n in out if q in (n["nominee"] or "").lower() or q in (n["nominator_name"] or "").lower()]
+    if self_only:
+        out = [n for n in out if n.get("is_self_nominated")]
     return out
 
 
@@ -185,7 +223,8 @@ def nominees():
     experience = request.args.get("experience", "")
     title = request.args.get("title", "")
     search = request.args.get("search", "")
-    filtered = filter_nominees(NOMINEES, vertical, experience, title, search)
+    self_only = request.args.get("self_nominated") == "1"
+    filtered = filter_nominees(NOMINEES, vertical, experience, title, search, self_only)
     return jsonify(filtered)
 
 
@@ -207,6 +246,7 @@ def export():
             n["title"],
             n["current_account"],
             n["years_in_role"],
+            "Yes" if n.get("is_self_nominated") else "No",
             n["summary"],
         ])
     csv_bytes = output.getvalue().encode("utf-8-sig")  # BOM for Excel

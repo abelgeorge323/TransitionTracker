@@ -187,6 +187,79 @@ body {
   color: var(--text-muted);
 }
 
+/* Fast Facts */
+.fast-facts {
+  margin-bottom: 2rem;
+}
+
+.fast-facts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .fast-facts-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.fact-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+
+.fact-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: block;
+}
+
+.fact-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fact-detail {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
+.badge-self {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--accent);
+}
+
+.placement-table th.badge-col,
+.placement-table .badge-cell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.filter-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.filter-check input {
+  margin: 0;
+}
+
 /* Filters */
 .filters {
   display: flex;
@@ -454,6 +527,10 @@ body {
   }
 
   .placement-table td:first-child::before {
+    display: none;
+  }
+
+  .placement-table td.badge-cell:empty {
     display: none;
   }
 

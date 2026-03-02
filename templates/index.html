@@ -29,6 +29,25 @@
         <div class="stat-card"><span class="value" id="statVerticals">0</span><span class="label">Verticals</span></div>
       </section>
 
+      <section class="fast-facts" id="fastFacts">
+        <h2 class="section-title">Fast Facts</h2>
+        <div class="fast-facts-grid">
+          <div class="fact-card">
+            <span class="fact-value" id="factSelfCount">0</span>
+            <span class="fact-label">Self-Nominated</span>
+            <div class="fact-detail" id="factSelfList"></div>
+          </div>
+          <div class="fact-card">
+            <span class="fact-value" id="factVerticalsList"></span>
+            <span class="fact-label">Verticals</span>
+          </div>
+          <div class="fact-card">
+            <span class="fact-value" id="factTitlesList"></span>
+            <span class="fact-label">Titles</span>
+          </div>
+        </div>
+      </section>
+
       <h2 class="section-title">Deployment Grid — Vertical × Experience</h2>
       <div class="grid-wrap">
         <table class="deployment-grid" id="deploymentGrid">
@@ -59,6 +78,9 @@
         <select id="filterTitle">
           <option value="">All Titles</option>
         </select>
+        <label class="filter-check">
+          <input type="checkbox" id="filterSelfNominated"> Self-nominated only
+        </label>
         <input type="search" id="filterSearch" placeholder="Search name...">
         <button type="button" class="btn-export" id="btnExport">Export CSV</button>
       </div>
@@ -67,6 +89,7 @@
           <thead>
             <tr>
               <th>Nominee</th>
+              <th class="badge-col"></th>
               <th>Vertical</th>
               <th>Experience</th>
               <th>Title</th>
@@ -95,6 +118,7 @@
     const filterExperience = document.getElementById('filterExperience');
     const filterTitle = document.getElementById('filterTitle');
     const filterSearch = document.getElementById('filterSearch');
+    const filterSelfNominated = document.getElementById('filterSelfNominated');
     const btnExport = document.getElementById('btnExport');
 
     function showDashboard(show) {
@@ -107,6 +131,7 @@
       if (filterExperience.value) p.set('experience', filterExperience.value);
       if (filterTitle.value) p.set('title', filterTitle.value);
       if (filterSearch.value.trim()) p.set('search', filterSearch.value.trim());
+      if (filterSelfNominated && filterSelfNominated.checked) p.set('self_nominated', '1');
       return p.toString();
     }
 
@@ -141,6 +166,7 @@
       tableBody.innerHTML = list.map(n => `
         <tr>
           <td data-label="Nominee"><strong>${escapeHtml(n.nominee)}</strong></td>
+          <td class="badge-cell" data-label="${n.is_self_nominated ? 'Self-nominated' : ''}">${n.is_self_nominated ? '<span class="badge-self">Self</span>' : ''}</td>
           <td data-label="Vertical">${escapeHtml(n.vertical)}</td>
           <td data-label="Experience"><span class="exp-badge ${(n.experience || '').toLowerCase()}">${escapeHtml(n.experience)}</span></td>
           <td data-label="Title">${escapeHtml(n.title)}</td>
@@ -174,6 +200,7 @@
     filterVertical.addEventListener('change', loadNominees);
     filterExperience.addEventListener('change', loadNominees);
     filterTitle.addEventListener('change', loadNominees);
+    filterSelfNominated.addEventListener('change', loadNominees);
     filterSearch.addEventListener('input', debounce(loadNominees, 300));
 
     btnExport.addEventListener('click', () => {
