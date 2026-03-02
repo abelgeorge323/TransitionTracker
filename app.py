@@ -19,8 +19,8 @@ NOMINEES = []
 def _load_csv_from_data():
     """Load CSV from Data folder (works for both local and Heroku when CSV is in repo)."""
     data_dir = os.path.join(os.path.dirname(__file__), "Data")
-    # Prefer new sheet with (1), fallback to original
-    for name in ("Transition Team Member Nomination Form(Sheet1) (1).csv", "Transition Team Member Nomination Form(Sheet1).csv"):
+    # Prefer newest sheet (2), then (1), then original
+    for name in ("Transition Team Member Nomination Form(Sheet1) (2).csv", "Transition Team Member Nomination Form(Sheet1) (1).csv", "Transition Team Member Nomination Form(Sheet1).csv"):
         path = os.path.join(data_dir, name)
         if os.path.isfile(path):
             with open(path, encoding="utf-8-sig") as f:
