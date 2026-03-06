@@ -19,7 +19,7 @@ NOMINEES = []
 def _load_csv_from_data():
     """Load CSV from Data folder (works for both local and Heroku when CSV is in repo)."""
     global NOMINEES
-    names = ("Transition Team Member Nomination Form(Sheet1) (2).csv", "Transition Team Member Nomination Form(Sheet1) (1).csv", "Transition Team Member Nomination Form(Sheet1).csv")
+    names = ("Transition Team Member Nomination Form(Sheet1) (3).csv", "Transition Team Member Nomination Form(Sheet1) (2).csv", "Transition Team Member Nomination Form(Sheet1) (1).csv", "Transition Team Member Nomination Form(Sheet1).csv")
     # Try paths: next to app.py, then cwd/Data
     for data_dir in (os.path.join(os.path.dirname(os.path.abspath(__file__)), "Data"), os.path.join(os.getcwd(), "Data")):
         if not os.path.isdir(data_dir):

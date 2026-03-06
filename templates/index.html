@@ -172,9 +172,12 @@
       const q = buildParams();
       const r = await fetch('/api/nominees?' + q);
       const list = await r.json();
-      tableBody.innerHTML = list.map(n => `
+      tableBody.innerHTML = list.map(n => {
+        const nominatorTip = (n.nominator_name || n.nominator_email) ? ` title="Nominated by: ${escapeHtml(n.nominator_name || n.nominator_email || '')}"` : '';
+        const nominatorMark = (n.nominator_name || n.nominator_email) ? `<span class="nominee-by"${nominatorTip} aria-label="Nominated by">ⓘ</span>` : '';
+        return `
         <tr>
-          <td data-label="Nominee"><strong>${escapeHtml(n.nominee)}</strong></td>
+          <td data-label="Nominee"><strong>${escapeHtml(n.nominee)}</strong>${nominatorMark}</td>
           <td class="badge-cell" data-label="${n.is_self_nominated ? 'Self-nominated' : ''}">${n.is_self_nominated ? '<span class="badge-self">Self</span>' : ''}</td>
           <td data-label="Vertical">${escapeHtml(n.vertical)}</td>
           <td data-label="Experience"><span class="exp-badge ${(n.experience || '').toLowerCase()}">${escapeHtml(n.experience)}</span></td>
@@ -182,7 +185,7 @@
           <td data-label="Current Account">${escapeHtml(n.current_account)}</td>
           <td data-label="Summary" class="summary-cell">${escapeHtml(n.summary || '—')}</td>
         </tr>
-      `).join('');
+      `; }).join('');
       emptyState.classList.toggle('hidden', list.length > 0);
     }
 
