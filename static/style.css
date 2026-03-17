@@ -524,6 +524,13 @@ body {
   min-width: 900px;
 }
 
+/* Gold divider after #2 Tenure (separates "who's your #2" from "MIT / pipeline" questions) */
+.succession-table th.gold-divider,
+.succession-table td.gold-divider {
+  border-left: 3px solid #eab308;
+  padding-left: 1rem;
+}
+
 
 /* ========== Mobile Enhancements ========== */
 @media (max-width: 767px) {

@@ -111,7 +111,7 @@
         <div class="stat-card"><span class="value" id="succTotal">0</span><span class="label">Total Leaders</span></div>
         <div class="stat-card expert"><span class="value" id="succWith2">0</span><span class="label">With #2</span></div>
         <div class="stat-card intermediate"><span class="value" id="succWithMIT">0</span><span class="label">With MIT</span></div>
-        <div class="stat-card novice"><span class="value" id="succWithPipeline">0</span><span class="label">With #2's #2</span></div>
+        <div class="stat-card novice"><span class="value" id="succWithPipeline">0</span><span class="label">With 3rd in Line</span></div>
         <div class="stat-card"><span class="value" id="succVerticals">0</span><span class="label">Verticals</span></div>
       </section>
 
@@ -140,12 +140,13 @@
               <th>Leader</th>
               <th>Title</th>
               <th>Vertical</th>
+              <th>Account</th>
               <th>#2</th>
               <th>#2 Tenure</th>
-              <th>MIT</th>
+              <th class="gold-divider">MIT</th>
               <th>MIT Name</th>
-              <th>#2's #2</th>
-              <th>#2's #2 Name</th>
+              <th>3rd in Line</th>
+              <th>3rd in Line Name</th>
               <th>Risk</th>
             </tr>
           </thead>
@@ -331,17 +332,25 @@
         const readinessPop = r.successor_readiness_notes
           ? `<span class="tip-wrap"><span class="nominee-by">\u24d8</span><span class="tip-pop">${esc(r.successor_readiness_notes)}</span></span>`
           : '';
+        const accountFull = r.account || '';
+        const accountPrimary = r.account_primary || '';
+        const accountCell = accountFull
+          ? (accountPrimary === accountFull
+            ? esc(accountPrimary)
+            : `<span class="tip-wrap">${esc(accountPrimary)}<span class="nominee-by">\u24d8</span><span class="tip-pop">${esc(accountFull)}</span></span>`)
+          : '\u2014';
         return `
         <tr>
           <td data-label="Leader"><strong>${esc(r.leader_name)}</strong></td>
           <td data-label="Title">${esc(r.leader_title || '\u2014')}</td>
           <td data-label="Vertical">${esc(r.vertical)}</td>
+          <td data-label="Account">${accountCell}</td>
           <td data-label="#2">${esc(r.successor_name || '\u2014')}${readinessPop}</td>
           <td data-label="#2 Tenure">${esc(r.successor_tenure || '\u2014')}</td>
-          <td data-label="MIT">${r.mentoring_mit ? '<span class="badge-yes">Yes</span>' : '<span class="badge-no">No</span>'}</td>
+          <td data-label="MIT" class="gold-divider">${r.mentoring_mit ? '<span class="badge-yes">Yes</span>' : '<span class="badge-no">No</span>'}</td>
           <td data-label="MIT Name">${esc(r.mit_name || '\u2014')}</td>
-          <td data-label="#2's #2">${r.successor_has_successor ? '<span class="badge-yes">Yes</span>' : '<span class="badge-no">No</span>'}</td>
-          <td data-label="#2's #2 Name">${esc(r.successor_successor_name || '\u2014')}</td>
+          <td data-label="3rd in Line">${r.successor_has_successor ? '<span class="badge-yes">Yes</span>' : '<span class="badge-no">No</span>'}</td>
+          <td data-label="3rd in Line Name">${esc(r.successor_successor_name || '\u2014')}</td>
           <td data-label="Risk" class="risk-cell">${riskBadges || '\u2014'}</td>
         </tr>`;
       }).join('');

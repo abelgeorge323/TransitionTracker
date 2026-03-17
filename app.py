@@ -153,6 +153,39 @@ def get_grid(nominees: list) -> dict:
 
 _EMPTY_VALS = {"", "none", "n/a", "na", "tbd", "currently recruiting"}
 
+# Leaders to hide from succession site
+SUCCESSION_HIDE_LEADERS = {"Julie Bianchi", "Amani Siddiqui", "Kyle Richardson"}
+
+# Leader name -> Account(s) for display. Multiple accounts: primary shown, full list in tooltip.
+LEADER_ACCOUNTS = {
+    "Allison Ndihokubwayo": "Delta",
+    "Justin Bailey": "Delta",
+    "Nicholas Mufarreh": "Ford Leadec",
+    "Logan Newman": "General Electric, GE Power, Hyliion",
+    "Brian Davis": "Merck",
+    "Mike Jedan": "SVP Global Accounts",
+    "Scott Kimball": "Sanofi, Moderna Biotechnology Company",
+    "Jack Thornton": "Nike, GXO Logistics",
+    "Benjamin Ehrenberg": "Lockheed Martin, Parsons Corporation",
+    "Zach Shock": "BI",
+    "Jennifer Segovia": "General Dynamics, Northrop Grumman",
+    "Mike Barry": "Bristol Myers Squibb, Novartis",
+    "Isaac Calderon": "Bayer, MilliporeSigma, Kenvue, Bluerock Therapeutics, Johnson & Johnson",
+    "Siddarth Shah": "Micron Tech, Mp Mask Technology Center",
+    "Jacqueline Maravilla": "Lonza, Genentech",
+    "Sarah Denley": "Lonza, Genentech",
+    "Aaron Simpson": "Mars, Ball Corporation, 3M Corp",
+    "Spencer Murphy": "Honda, Ford",
+    "Chad Boulton": "Eli Lilly, Elanco",
+    "Justin Homa": "Organon",
+    "Taylor Wattenberg": "Microsoft",
+    "Gisell Langelier": "Medtronic, Capsida Biotherapeutics, Fuji Film",
+    "John Mann": "SVP Tech",
+    "Rafael Ortiz": "Biogen",
+    "Rafaed Ortiz": "Biogen",
+    "Gregory DeMedio": "Abbott Labs",
+}
+
 
 def _is_empty_successor(val: str) -> bool:
     return (val or "").strip().lower() in _EMPTY_VALS
@@ -166,8 +199,14 @@ def parse_succession_csv(content: str) -> list[dict]:
         leader = (row.get("Created By", "") or "").strip()
         if not leader:
             continue
+        if leader == "Kate Follmann":
+            continue
+        if leader == "Sarah Denley":
+            leader = "Jacqueline Maravilla"
         title = (row.get("Title", "") or "").strip()
         vertical = (row.get("Vertical", "") or "").strip() or "Unspecified"
+        if vertical in ("Choice 1", "Other"):
+            vertical = "Aviation"
         successor = (row.get("Who is your current %232?", "") or row.get("Who is your current #2?", "") or "").strip()
         successor_role = (row.get("What is their current role/title?", "") or "").strip()
         successor_tenure = (row.get("How long have they been with SBM?", "") or "").strip()
@@ -192,11 +231,18 @@ def parse_succession_csv(content: str) -> list[dict]:
         # Skip rows that are test/blank entries (no title AND no successor AND no MIT)
         if not title and _is_empty_successor(successor) and not mentoring_mit:
             continue
+        if leader in SUCCESSION_HIDE_LEADERS:
+            continue
+
+        account_full = LEADER_ACCOUNTS.get(leader, "").strip()
+        account_primary = account_full.split(",")[0].strip() if account_full else ""
 
         rows.append({
             "leader_name": leader,
             "leader_title": title,
             "vertical": vertical,
+            "account": account_full,
+            "account_primary": account_primary,
             "successor_name": successor,
             "successor_role": successor_role,
             "successor_tenure": successor_tenure,
@@ -226,7 +272,8 @@ def _load_succession_csv():
             if not os.path.isdir(d):
                 continue
             csvs = [f for f in os.listdir(d) if f.lower().endswith(".csv")]
-            for name in ("Succession Planning.csv",):
+            preferred = ("Succession Planning (1).csv", "Succession Planning.csv")
+            for name in preferred:
                 if name in csvs:
                     csvs = [name]
                     break
@@ -409,10 +456,10 @@ def succession_export():
         records = [r for r in records if r["vertical"] == vertical]
     output = io.StringIO()
     w = csv.writer(output)
-    w.writerow(["Leader", "Title", "Vertical", "#2", "#2 Role", "#2 Tenure", "#2 Readiness Notes", "MIT (Y/N)", "MIT Name", "MIT Reason Not", "#2's #2 (Y/N)", "#2's #2 Name", "#2's #2 Notes", "Risk Flag"])
+    w.writerow(["Leader", "Title", "Vertical", "Account(s)", "#2", "#2 Role", "#2 Tenure", "#2 Readiness Notes", "MIT (Y/N)", "MIT Name", "MIT Reason Not", "3rd in Line (Y/N)", "3rd in Line Name", "3rd in Line Notes", "Risk Flag"])
     for r in records:
         w.writerow([
-            r["leader_name"], r["leader_title"], r["vertical"],
+            r["leader_name"], r["leader_title"], r["vertical"], r.get("account", ""),
             r["successor_name"], r["successor_role"], r["successor_tenure"], r["successor_readiness_notes"],
             "Yes" if r["mentoring_mit"] else "No", r["mit_name"], r["mit_reason_not"],
             "Yes" if r["successor_has_successor"] else "No", r["successor_successor_name"], r["successor_successor_notes"],
