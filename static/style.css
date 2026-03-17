@@ -287,19 +287,52 @@ body {
   white-space: nowrap;
 }
 
-/* Discreet "nominated by" — hover to see nominator name */
+/* Tap-to-show tooltip (works on mobile + desktop) */
+.tip-wrap {
+  position: relative;
+  display: inline;
+}
+
 .nominee-by {
   display: inline-block;
   margin-left: 0.35rem;
   font-size: 0.75rem;
   color: var(--text-muted);
   opacity: 0.6;
-  cursor: help;
+  cursor: pointer;
   vertical-align: middle;
+  -webkit-tap-highlight-color: transparent;
 }
-.nominee-by:hover {
+
+.tip-wrap:hover .nominee-by,
+.tip-wrap.open .nominee-by {
   opacity: 1;
   color: var(--accent);
+}
+
+.tip-pop {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 20;
+  margin-top: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: var(--text);
+  line-height: 1.4;
+  white-space: normal;
+  min-width: 200px;
+  max-width: 320px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.tip-wrap:hover .tip-pop,
+.tip-wrap.open .tip-pop {
+  display: block;
 }
 
 .filter-check {
@@ -440,7 +473,7 @@ body {
 
 /* Succession-specific */
 .risk-snapshot {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   margin-bottom: 2rem;
 }
 
@@ -487,10 +520,6 @@ body {
   min-width: 900px;
 }
 
-.succession-table td[data-label="#2"] span[title] {
-  cursor: help;
-  border-bottom: 1px dashed var(--text-muted);
-}
 
 /* ========== Mobile Enhancements ========== */
 @media (max-width: 767px) {
@@ -668,7 +697,7 @@ body {
 
   /* Risk snapshot mobile */
   .risk-snapshot {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
 

@@ -118,7 +118,6 @@
       <section class="snapshot risk-snapshot">
         <div class="stat-card risk"><span class="value" id="succNo2">0</span><span class="label">No #2</span></div>
         <div class="stat-card risk"><span class="value" id="succNoMIT">0</span><span class="label">No MIT</span></div>
-        <div class="stat-card risk"><span class="value" id="succNoPipeline">0</span><span class="label">No Pipeline</span></div>
       </section>
 
       <h2 class="section-title">Filter Succession Data</h2>
@@ -129,7 +128,6 @@
           <option value="">All Risk Levels</option>
           <option value="No #2">No #2</option>
           <option value="No MIT">No MIT</option>
-          <option value="No pipeline">No Pipeline</option>
         </select>
         <button type="button" class="btn-export" id="btnSuccExport">Export CSV</button>
       </div>
@@ -241,8 +239,8 @@
       const r = await fetch('/api/nominees?' + q);
       const list = await r.json();
       tableBody.innerHTML = list.map(n => {
-        const nominatorTip = (n.nominator_name || n.nominator_email) ? ` title="Nominated by: ${esc(n.nominator_name || n.nominator_email || '')}"` : '';
-        const nominatorMark = (n.nominator_name || n.nominator_email) ? `<span class="nominee-by"${nominatorTip} aria-label="Nominated by">\u24d8</span>` : '';
+        const nominatorText = n.nominator_name || n.nominator_email || '';
+        const nominatorMark = nominatorText ? `<span class="tip-wrap"><span class="nominee-by" aria-label="Nominated by">\u24d8</span><span class="tip-pop">Nominated by: ${esc(nominatorText)}</span></span>` : '';
         return `
         <tr>
           <td data-label="Nominee"><strong>${esc(n.nominee)}</strong>${nominatorMark}</td>
@@ -294,7 +292,6 @@
     const succVerticals = document.getElementById('succVerticals');
     const succNo2 = document.getElementById('succNo2');
     const succNoMIT = document.getElementById('succNoMIT');
-    const succNoPipeline = document.getElementById('succNoPipeline');
     const succBody = document.getElementById('succBody');
     const succEmptyState = document.getElementById('succEmptyState');
     const succFilterVertical = document.getElementById('succFilterVertical');
@@ -321,7 +318,6 @@
       succVerticals.textContent = s.verticals;
       succNo2.textContent = s.no_number2;
       succNoMIT.textContent = s.no_mit;
-      succNoPipeline.textContent = s.no_pipeline;
     }
 
     async function loadSuccRecords() {
@@ -332,13 +328,15 @@
         const riskBadges = (r.risk_flags || []).map(f =>
           `<span class="risk-badge">${esc(f)}</span>`
         ).join(' ');
-        const readinessTip = r.successor_readiness_notes ? ` title="${esc(r.successor_readiness_notes)}"` : '';
+        const readinessPop = r.successor_readiness_notes
+          ? `<span class="tip-wrap"><span class="nominee-by">\u24d8</span><span class="tip-pop">${esc(r.successor_readiness_notes)}</span></span>`
+          : '';
         return `
         <tr>
           <td data-label="Leader"><strong>${esc(r.leader_name)}</strong></td>
           <td data-label="Title">${esc(r.leader_title || '\u2014')}</td>
           <td data-label="Vertical">${esc(r.vertical)}</td>
-          <td data-label="#2"><span${readinessTip}>${esc(r.successor_name || '\u2014')}</span></td>
+          <td data-label="#2">${esc(r.successor_name || '\u2014')}${readinessPop}</td>
           <td data-label="#2 Tenure">${esc(r.successor_tenure || '\u2014')}</td>
           <td data-label="MIT">${r.mentoring_mit ? '<span class="badge-yes">Yes</span>' : '<span class="badge-no">No</span>'}</td>
           <td data-label="MIT Name">${esc(r.mit_name || '\u2014')}</td>
@@ -382,6 +380,15 @@
       let t;
       return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
     }
+
+    /* ===== Tap-to-show tooltips (mobile-friendly) ===== */
+    document.addEventListener('click', e => {
+      const wrap = e.target.closest('.tip-wrap');
+      document.querySelectorAll('.tip-wrap.open').forEach(el => {
+        if (el !== wrap) el.classList.remove('open');
+      });
+      if (wrap) wrap.classList.toggle('open');
+    });
 
     /* ===== Init ===== */
     populateFilters().then(refreshWithRetry);

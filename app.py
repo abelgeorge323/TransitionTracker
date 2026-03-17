@@ -183,14 +183,11 @@ def parse_succession_csv(content: str) -> list[dict]:
         succ_succ_notes = (row.get("Any notes on this individuals readiness or development?", "") or "").strip()
         succ_succ_reason_not = (row.get("If your %232 is not currently developing a successor or you are unsure, what is the main reason?", "") or row.get("If your #2 is not currently developing a successor or you are unsure, what is the main reason?", "") or "").strip()
 
-        # Risk flags
         risks = []
         if _is_empty_successor(successor):
             risks.append("No #2")
         if not mentoring_mit:
             risks.append("No MIT")
-        if not has_successor_pipeline:
-            risks.append("No pipeline")
 
         # Skip rows that are test/blank entries (no title AND no successor AND no MIT)
         if not title and _is_empty_successor(successor) and not mentoring_mit:
@@ -251,7 +248,6 @@ def get_succession_stats(records: list) -> dict:
     with_pipeline = sum(1 for r in records if r["successor_has_successor"])
     no_number2 = total - with_number2
     no_mit = total - with_mit
-    no_pipeline = total - with_pipeline
     verticals_set = set(r["vertical"] for r in records if r.get("vertical"))
     return {
         "total_leaders": total,
@@ -260,7 +256,6 @@ def get_succession_stats(records: list) -> dict:
         "with_pipeline": with_pipeline,
         "no_number2": no_number2,
         "no_mit": no_mit,
-        "no_pipeline": no_pipeline,
         "verticals": len(verticals_set),
         "verticals_list": sorted(verticals_set),
     }
