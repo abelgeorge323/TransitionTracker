@@ -314,9 +314,9 @@ body {
   display: none;
   position: absolute;
   left: 0;
-  top: 100%;
+  bottom: 100%;
   z-index: 20;
-  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
   padding: 0.5rem 0.75rem;
   background: var(--surface-hover);
   border: 1px solid var(--border);
@@ -327,7 +327,9 @@ body {
   white-space: normal;
   min-width: 200px;
   max-width: 320px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  max-height: 180px;
+  overflow-y: auto;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.4);
 }
 
 .tip-wrap:hover .tip-pop,
@@ -401,9 +403,11 @@ body {
 /* Table */
 .table-wrap {
   overflow-x: auto;
+  overflow-y: visible;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
+  position: relative;
 }
 
 .placement-table {
