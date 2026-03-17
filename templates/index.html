@@ -20,7 +20,13 @@
       </div>
     </header>
 
-    <div class="dashboard" id="dashboard">
+    <nav class="tab-bar" id="tabBar">
+      <button class="tab-btn active" data-tab="transition">Transition Tracker</button>
+      <button class="tab-btn" data-tab="succession">Succession Planning</button>
+    </nav>
+
+    <!-- ==================== TRANSITION PANEL ==================== -->
+    <div class="tab-panel active" id="panelTransition" data-tab="transition">
       <section class="snapshot" id="snapshot">
         <div class="stat-card"><span class="value" id="statTotal">0</span><span class="label">Total Nominees</span></div>
         <div class="stat-card expert"><span class="value" id="statExpert">0</span><span class="label">Experts</span></div>
@@ -66,18 +72,14 @@
 
       <h2 class="section-title">Filter & Placement</h2>
       <div class="filters">
-        <select id="filterVertical">
-          <option value="">All Verticals</option>
-        </select>
+        <select id="filterVertical"><option value="">All Verticals</option></select>
         <select id="filterExperience">
           <option value="">All Experience</option>
           <option value="Expert">Expert</option>
           <option value="Intermediate">Intermediate</option>
           <option value="Novice">Novice</option>
         </select>
-        <select id="filterTitle">
-          <option value="">All Titles</option>
-        </select>
+        <select id="filterTitle"><option value="">All Titles</option></select>
         <label class="filter-check">
           <input type="checkbox" id="filterSelfNominated"> Self-nominated only
         </label>
@@ -102,10 +104,80 @@
         <div class="empty-state" id="emptyState">No nominees match filters.</div>
       </div>
     </div>
+
+    <!-- ==================== SUCCESSION PANEL ==================== -->
+    <div class="tab-panel" id="panelSuccession" data-tab="succession">
+      <section class="snapshot" id="succSnapshot">
+        <div class="stat-card"><span class="value" id="succTotal">0</span><span class="label">Total Leaders</span></div>
+        <div class="stat-card expert"><span class="value" id="succWith2">0</span><span class="label">With #2</span></div>
+        <div class="stat-card intermediate"><span class="value" id="succWithMIT">0</span><span class="label">With MIT</span></div>
+        <div class="stat-card novice"><span class="value" id="succWithPipeline">0</span><span class="label">With #2's #2</span></div>
+        <div class="stat-card"><span class="value" id="succVerticals">0</span><span class="label">Verticals</span></div>
+      </section>
+
+      <section class="snapshot risk-snapshot">
+        <div class="stat-card risk"><span class="value" id="succNo2">0</span><span class="label">No #2</span></div>
+        <div class="stat-card risk"><span class="value" id="succNoMIT">0</span><span class="label">No MIT</span></div>
+        <div class="stat-card risk"><span class="value" id="succNoPipeline">0</span><span class="label">No Pipeline</span></div>
+      </section>
+
+      <h2 class="section-title">Filter Succession Data</h2>
+      <div class="filters">
+        <select id="succFilterVertical"><option value="">All Verticals</option></select>
+        <input type="search" id="succFilterSearch" placeholder="Search leader or #2...">
+        <select id="succFilterRisk">
+          <option value="">All Risk Levels</option>
+          <option value="No #2">No #2</option>
+          <option value="No MIT">No MIT</option>
+          <option value="No pipeline">No Pipeline</option>
+        </select>
+        <button type="button" class="btn-export" id="btnSuccExport">Export CSV</button>
+      </div>
+
+      <h2 class="section-title">Succession Chain</h2>
+      <div class="table-wrap">
+        <table class="placement-table succession-table" id="successionTable">
+          <thead>
+            <tr>
+              <th>Leader</th>
+              <th>Title</th>
+              <th>Vertical</th>
+              <th>#2</th>
+              <th>#2 Tenure</th>
+              <th>MIT</th>
+              <th>MIT Name</th>
+              <th>#2's #2</th>
+              <th>#2's #2 Name</th>
+              <th>Risk</th>
+            </tr>
+          </thead>
+          <tbody id="succBody"></tbody>
+        </table>
+        <div class="empty-state" id="succEmptyState">No succession records match filters.</div>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    const dashboard = document.getElementById('dashboard');
+    /* ===== Tab switching ===== */
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    let successionLoaded = false;
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === target));
+        tabPanels.forEach(p => p.classList.toggle('active', p.dataset.tab === target));
+        if (target === 'succession' && !successionLoaded) {
+          successionLoaded = true;
+          populateSuccFilters().then(refreshSuccession);
+        }
+      });
+    });
+
+    /* ===== Transition tab ===== */
     const statTotal = document.getElementById('statTotal');
     const statExpert = document.getElementById('statExpert');
     const statIntermediate = document.getElementById('statIntermediate');
@@ -124,10 +196,6 @@
     const factSelfList = document.getElementById('factSelfList');
     const factVerticalsList = document.getElementById('factVerticalsList');
     const factTitlesList = document.getElementById('factTitlesList');
-
-    function showDashboard(show) {
-      dashboard.classList.toggle('hidden', !show);
-    }
 
     function buildParams() {
       const p = new URLSearchParams();
@@ -148,9 +216,9 @@
       statNovice.textContent = s.novice;
       statVerticals.textContent = s.verticals;
       if (factSelfCount) factSelfCount.textContent = s.self_nominated_count ?? 0;
-      if (factSelfList) factSelfList.textContent = (s.self_nominated || []).join(', ') || '—';
-      if (factVerticalsList) factVerticalsList.textContent = (s.verticals_list || []).join(', ') || '—';
-      if (factTitlesList) factTitlesList.textContent = (s.titles || []).join(', ') || '—';
+      if (factSelfList) factSelfList.textContent = (s.self_nominated || []).join(', ') || '\u2014';
+      if (factVerticalsList) factVerticalsList.textContent = (s.verticals_list || []).join(', ') || '\u2014';
+      if (factTitlesList) factTitlesList.textContent = (s.titles || []).join(', ') || '\u2014';
       return s;
     }
 
@@ -159,7 +227,7 @@
       const rows = await r.json();
       gridBody.innerHTML = rows.map(row => `
         <tr>
-          <td>${escapeHtml(row.vertical)}</td>
+          <td>${esc(row.vertical)}</td>
           <td class="${row.novice === 0 ? 'thin' : ''}">${row.novice}</td>
           <td class="${row.intermediate === 0 ? 'thin' : ''}">${row.intermediate}</td>
           <td class="${row.expert === 0 ? 'thin' : ''}">${row.expert}</td>
@@ -173,27 +241,20 @@
       const r = await fetch('/api/nominees?' + q);
       const list = await r.json();
       tableBody.innerHTML = list.map(n => {
-        const nominatorTip = (n.nominator_name || n.nominator_email) ? ` title="Nominated by: ${escapeHtml(n.nominator_name || n.nominator_email || '')}"` : '';
-        const nominatorMark = (n.nominator_name || n.nominator_email) ? `<span class="nominee-by"${nominatorTip} aria-label="Nominated by">ⓘ</span>` : '';
+        const nominatorTip = (n.nominator_name || n.nominator_email) ? ` title="Nominated by: ${esc(n.nominator_name || n.nominator_email || '')}"` : '';
+        const nominatorMark = (n.nominator_name || n.nominator_email) ? `<span class="nominee-by"${nominatorTip} aria-label="Nominated by">\u24d8</span>` : '';
         return `
         <tr>
-          <td data-label="Nominee"><strong>${escapeHtml(n.nominee)}</strong>${nominatorMark}</td>
+          <td data-label="Nominee"><strong>${esc(n.nominee)}</strong>${nominatorMark}</td>
           <td class="badge-cell" data-label="${n.is_self_nominated ? 'Self-nominated' : ''}">${n.is_self_nominated ? '<span class="badge-self">Self</span>' : ''}</td>
-          <td data-label="Vertical">${escapeHtml(n.vertical)}</td>
-          <td data-label="Experience"><span class="exp-badge ${(n.experience || '').toLowerCase()}">${escapeHtml(n.experience)}</span></td>
-          <td data-label="Title">${escapeHtml(n.title)}</td>
-          <td data-label="Current Account">${escapeHtml(n.current_account)}</td>
-          <td data-label="Summary" class="summary-cell">${escapeHtml(n.summary || '—')}</td>
-        </tr>
-      `; }).join('');
+          <td data-label="Vertical">${esc(n.vertical)}</td>
+          <td data-label="Experience"><span class="exp-badge ${(n.experience || '').toLowerCase()}">${esc(n.experience)}</span></td>
+          <td data-label="Title">${esc(n.title)}</td>
+          <td data-label="Current Account">${esc(n.current_account)}</td>
+          <td data-label="Summary" class="summary-cell">${esc(n.summary || '\u2014')}</td>
+        </tr>`;
+      }).join('');
       emptyState.classList.toggle('hidden', list.length > 0);
-    }
-
-    function escapeHtml(s) {
-      if (!s) return '';
-      const div = document.createElement('div');
-      div.textContent = s;
-      return div.innerHTML;
     }
 
     async function refresh() {
@@ -205,10 +266,7 @@
       const r = await fetch('/api/stats');
       const s = await r.json();
       if (s.total === 0) {
-        try {
-          await fetch('/api/reload');
-          await refresh();
-        } catch (e) { /* ignore */ }
+        try { await fetch('/api/reload'); await refresh(); } catch (e) {}
       }
     }
 
@@ -217,8 +275,8 @@
       const list = await r.json();
       const verticals = [...new Set(list.map(n => n.vertical).filter(Boolean))].sort();
       const titles = [...new Set(list.map(n => n.title).filter(Boolean))].sort();
-      filterVertical.innerHTML = '<option value="">All Verticals</option>' + verticals.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-      filterTitle.innerHTML = '<option value="">All Titles</option>' + titles.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+      filterVertical.innerHTML = '<option value="">All Verticals</option>' + verticals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+      filterTitle.innerHTML = '<option value="">All Titles</option>' + titles.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
     }
 
     filterVertical.addEventListener('change', loadNominees);
@@ -226,17 +284,106 @@
     filterTitle.addEventListener('change', loadNominees);
     filterSelfNominated.addEventListener('change', loadNominees);
     filterSearch.addEventListener('input', debounce(loadNominees, 300));
+    btnExport.addEventListener('click', () => { window.location.href = '/api/export?' + buildParams(); });
 
-    btnExport.addEventListener('click', () => {
-      window.location.href = '/api/export?' + buildParams();
+    /* ===== Succession tab ===== */
+    const succTotal = document.getElementById('succTotal');
+    const succWith2 = document.getElementById('succWith2');
+    const succWithMIT = document.getElementById('succWithMIT');
+    const succWithPipeline = document.getElementById('succWithPipeline');
+    const succVerticals = document.getElementById('succVerticals');
+    const succNo2 = document.getElementById('succNo2');
+    const succNoMIT = document.getElementById('succNoMIT');
+    const succNoPipeline = document.getElementById('succNoPipeline');
+    const succBody = document.getElementById('succBody');
+    const succEmptyState = document.getElementById('succEmptyState');
+    const succFilterVertical = document.getElementById('succFilterVertical');
+    const succFilterSearch = document.getElementById('succFilterSearch');
+    const succFilterRisk = document.getElementById('succFilterRisk');
+    const btnSuccExport = document.getElementById('btnSuccExport');
+
+    function buildSuccParams() {
+      const p = new URLSearchParams();
+      if (succFilterVertical.value) p.set('vertical', succFilterVertical.value);
+      if (succFilterSearch.value.trim()) p.set('search', succFilterSearch.value.trim());
+      if (succFilterRisk.value) p.set('risk', succFilterRisk.value);
+      return p.toString();
+    }
+
+    async function loadSuccStats() {
+      const q = succFilterVertical.value ? `?vertical=${encodeURIComponent(succFilterVertical.value)}` : '';
+      const r = await fetch('/api/succession/stats' + q);
+      const s = await r.json();
+      succTotal.textContent = s.total_leaders;
+      succWith2.textContent = s.with_number2;
+      succWithMIT.textContent = s.with_mit;
+      succWithPipeline.textContent = s.with_pipeline;
+      succVerticals.textContent = s.verticals;
+      succNo2.textContent = s.no_number2;
+      succNoMIT.textContent = s.no_mit;
+      succNoPipeline.textContent = s.no_pipeline;
+    }
+
+    async function loadSuccRecords() {
+      const q = buildSuccParams();
+      const r = await fetch('/api/succession/records?' + q);
+      const list = await r.json();
+      succBody.innerHTML = list.map(r => {
+        const riskBadges = (r.risk_flags || []).map(f =>
+          `<span class="risk-badge">${esc(f)}</span>`
+        ).join(' ');
+        const readinessTip = r.successor_readiness_notes ? ` title="${esc(r.successor_readiness_notes)}"` : '';
+        return `
+        <tr>
+          <td data-label="Leader"><strong>${esc(r.leader_name)}</strong></td>
+          <td data-label="Title">${esc(r.leader_title || '\u2014')}</td>
+          <td data-label="Vertical">${esc(r.vertical)}</td>
+          <td data-label="#2"><span${readinessTip}>${esc(r.successor_name || '\u2014')}</span></td>
+          <td data-label="#2 Tenure">${esc(r.successor_tenure || '\u2014')}</td>
+          <td data-label="MIT">${r.mentoring_mit ? '<span class="badge-yes">Yes</span>' : '<span class="badge-no">No</span>'}</td>
+          <td data-label="MIT Name">${esc(r.mit_name || '\u2014')}</td>
+          <td data-label="#2's #2">${r.successor_has_successor ? '<span class="badge-yes">Yes</span>' : '<span class="badge-no">No</span>'}</td>
+          <td data-label="#2's #2 Name">${esc(r.successor_successor_name || '\u2014')}</td>
+          <td data-label="Risk" class="risk-cell">${riskBadges || '\u2014'}</td>
+        </tr>`;
+      }).join('');
+      succEmptyState.classList.toggle('hidden', list.length > 0);
+    }
+
+    async function refreshSuccession() {
+      await Promise.all([loadSuccStats(), loadSuccRecords()]);
+    }
+
+    async function populateSuccFilters() {
+      const r = await fetch('/api/succession/records');
+      const list = await r.json();
+      const verticals = [...new Set(list.map(r => r.vertical).filter(Boolean))].sort();
+      succFilterVertical.innerHTML = '<option value="">All Verticals</option>' + verticals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    }
+
+    succFilterVertical.addEventListener('change', refreshSuccession);
+    succFilterSearch.addEventListener('input', debounce(loadSuccRecords, 300));
+    succFilterRisk.addEventListener('change', loadSuccRecords);
+    btnSuccExport.addEventListener('click', () => {
+      const p = new URLSearchParams();
+      if (succFilterVertical.value) p.set('vertical', succFilterVertical.value);
+      window.location.href = '/api/succession/export?' + p.toString();
     });
+
+    /* ===== Utilities ===== */
+    function esc(s) {
+      if (!s) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
 
     function debounce(fn, ms) {
       let t;
       return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
     }
 
-    showDashboard(true);
+    /* ===== Init ===== */
     populateFilters().then(refreshWithRetry);
   </script>
 </body>

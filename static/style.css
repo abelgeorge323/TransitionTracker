@@ -80,6 +80,46 @@ body {
   .header h1 { font-size: 1.5rem; }
 }
 
+/* Tab Bar */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--border);
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 0.75rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  letter-spacing: 0.01em;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
 /* Executive Snapshot */
 .snapshot {
   display: grid;
@@ -398,6 +438,60 @@ body {
   display: none;
 }
 
+/* Succession-specific */
+.risk-snapshot {
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 2rem;
+}
+
+.stat-card.risk .value {
+  color: #ef4444;
+}
+
+.badge-yes {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--expert);
+}
+
+.badge-no {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.risk-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  white-space: nowrap;
+}
+
+.risk-cell {
+  min-width: 90px;
+}
+
+.succession-table {
+  min-width: 900px;
+}
+
+.succession-table td[data-label="#2"] span[title] {
+  cursor: help;
+  border-bottom: 1px dashed var(--text-muted);
+}
+
 /* ========== Mobile Enhancements ========== */
 @media (max-width: 767px) {
   .app {
@@ -558,5 +652,73 @@ body {
   .empty-state {
     padding: 2rem 1rem;
     font-size: 0.875rem;
+  }
+
+  /* Tab bar mobile */
+  .tab-bar {
+    margin-bottom: 1.5rem;
+  }
+
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  /* Risk snapshot mobile */
+  .risk-snapshot {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  /* Succession table: card layout on mobile */
+  .succession-table {
+    min-width: unset;
+  }
+
+  .succession-table thead {
+    display: none;
+  }
+
+  .succession-table,
+  .succession-table tbody,
+  .succession-table tr,
+  .succession-table td {
+    display: block;
+  }
+
+  .succession-table tbody tr {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+    padding: 1rem;
+    background: var(--surface);
+  }
+
+  .succession-table td {
+    padding: 0.4rem 0;
+    border: none;
+  }
+
+  .succession-table td:first-child {
+    padding-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .succession-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.2rem;
+  }
+
+  .succession-table td:first-child::before {
+    display: none;
   }
 }
