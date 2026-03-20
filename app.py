@@ -261,6 +261,24 @@ def parse_succession_csv(content: str) -> list[dict]:
     return rows
 
 
+_SUCC_PLAN_BASE = "Succession Planning.csv"
+_SUCC_PLAN_NUMBERED = re.compile(r"^Succession Planning \((\d+)\)\.csv$", re.IGNORECASE)
+
+
+def _ordered_succession_csv_filenames(csvs: list[str]) -> list[str]:
+    """Prefer newest numbered export first, then base file — same idea as Data/ nomination CSV order."""
+    numbered: list[tuple[int, str]] = []
+    for f in csvs:
+        m = _SUCC_PLAN_NUMBERED.match(f)
+        if m:
+            numbered.append((int(m.group(1)), f))
+    numbered.sort(key=lambda x: -x[0])
+    out = [name for _, name in numbered]
+    if _SUCC_PLAN_BASE in csvs:
+        out.append(_SUCC_PLAN_BASE)
+    return out
+
+
 def _load_succession_csv():
     """Load Succession Planning CSV from Succession (or Succsession) folder."""
     global SUCCESSION_RECORDS
@@ -272,12 +290,7 @@ def _load_succession_csv():
             if not os.path.isdir(d):
                 continue
             csvs = [f for f in os.listdir(d) if f.lower().endswith(".csv")]
-            preferred = ("Succession Planning (1).csv", "Succession Planning.csv")
-            for name in preferred:
-                if name in csvs:
-                    csvs = [name]
-                    break
-            for name in csvs:
+            for name in _ordered_succession_csv_filenames(csvs):
                 path = os.path.join(d, name)
                 try:
                     with open(path, encoding="utf-8-sig") as f:

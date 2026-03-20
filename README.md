@@ -18,6 +18,8 @@ A decision tool for leadership to view bench capacity, filter by vertical and ex
 3. Use the **Executive Snapshot** and **Deployment Grid** to scan capacity
 4. **Filter** and **Export** as needed for placement decisions
 
+**Succession Planning tab:** Export the Microsoft Forms succession survey as CSV into `Succsession/` (or `Succession/`). The app loads the **highest-numbered** `Succession Planning (N).csv` first, then falls back to `Succession Planning.csv` — same preference pattern as the numbered nomination files in `Data/`.
+
 ## Run Locally
 
 ```bash
