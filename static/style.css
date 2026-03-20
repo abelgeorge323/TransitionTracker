@@ -1,6 +1,7 @@
 /* Transition Deployment Tracker — Executive, Sleek, Mobile-First */
 
 :root {
+  color-scheme: dark;
   --bg: #0f0f12;
   --surface: #18181c;
   --surface-hover: #222228;
@@ -12,8 +13,99 @@
   --expert: #22c55e;
   --intermediate: #eab308;
   --novice: #06b6d4;
+  --risk: #ef4444;
+  --gold-divider: #eab308;
   --radius: 8px;
   --radius-sm: 6px;
+  --shadow-pop: 0 -4px 16px rgba(0, 0, 0, 0.45);
+  --badge-self-bg: rgba(59, 130, 246, 0.22);
+  --badge-expert-bg: rgba(34, 197, 94, 0.2);
+  --badge-intermediate-bg: rgba(234, 179, 8, 0.2);
+  --badge-novice-bg: rgba(6, 182, 212, 0.2);
+  --badge-unknown-bg: rgba(140, 140, 150, 0.22);
+  --badge-yes-bg: rgba(34, 197, 94, 0.2);
+  --badge-no-bg: rgba(239, 68, 68, 0.18);
+  --risk-badge-bg: rgba(239, 68, 68, 0.18);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --bg: #f0f1f6;
+    --surface: #ffffff;
+    --surface-hover: #e8e9f0;
+    --border: #d8d9e3;
+    --text: #12121a;
+    --text-muted: #5c5c6a;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --expert: #15803d;
+    --intermediate: #b45309;
+    --novice: #0e7490;
+    --risk: #dc2626;
+    --gold-divider: #ca8a04;
+    --shadow-pop: 0 -6px 24px rgba(0, 0, 0, 0.1);
+    --badge-self-bg: rgba(37, 99, 235, 0.12);
+    --badge-expert-bg: rgba(21, 128, 61, 0.12);
+    --badge-intermediate-bg: rgba(180, 83, 9, 0.14);
+    --badge-novice-bg: rgba(14, 116, 144, 0.12);
+    --badge-unknown-bg: rgba(92, 92, 106, 0.12);
+    --badge-yes-bg: rgba(21, 128, 61, 0.14);
+    --badge-no-bg: rgba(220, 38, 38, 0.12);
+    --risk-badge-bg: rgba(220, 38, 38, 0.12);
+  }
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f0f1f6;
+  --surface: #ffffff;
+  --surface-hover: #e8e9f0;
+  --border: #d8d9e3;
+  --text: #12121a;
+  --text-muted: #5c5c6a;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --expert: #15803d;
+  --intermediate: #b45309;
+  --novice: #0e7490;
+  --risk: #dc2626;
+  --gold-divider: #ca8a04;
+  --shadow-pop: 0 -6px 24px rgba(0, 0, 0, 0.1);
+  --badge-self-bg: rgba(37, 99, 235, 0.12);
+  --badge-expert-bg: rgba(21, 128, 61, 0.12);
+  --badge-intermediate-bg: rgba(180, 83, 9, 0.14);
+  --badge-novice-bg: rgba(14, 116, 144, 0.12);
+  --badge-unknown-bg: rgba(92, 92, 106, 0.12);
+  --badge-yes-bg: rgba(21, 128, 61, 0.14);
+  --badge-no-bg: rgba(220, 38, 38, 0.12);
+  --risk-badge-bg: rgba(220, 38, 38, 0.12);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f0f12;
+  --surface: #18181c;
+  --surface-hover: #222228;
+  --border: #2a2a32;
+  --text: #e8e8ec;
+  --text-muted: #8c8c96;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --expert: #22c55e;
+  --intermediate: #eab308;
+  --novice: #06b6d4;
+  --risk: #ef4444;
+  --gold-divider: #eab308;
+  --shadow-pop: 0 -4px 16px rgba(0, 0, 0, 0.45);
+  --badge-self-bg: rgba(59, 130, 246, 0.22);
+  --badge-expert-bg: rgba(34, 197, 94, 0.2);
+  --badge-intermediate-bg: rgba(234, 179, 8, 0.2);
+  --badge-novice-bg: rgba(6, 182, 212, 0.2);
+  --badge-unknown-bg: rgba(140, 140, 150, 0.22);
+  --badge-yes-bg: rgba(34, 197, 94, 0.2);
+  --badge-no-bg: rgba(239, 68, 68, 0.18);
+  --risk-badge-bg: rgba(239, 68, 68, 0.18);
 }
 
 * {
@@ -63,6 +155,7 @@ body {
   width: auto;
   object-fit: contain;
   opacity: 0.95;
+  color: var(--text);
 }
 
 @media (min-width: 768px) {
@@ -79,6 +172,71 @@ body {
 @media (min-width: 768px) {
   .header h1 { font-size: 1.5rem; }
 }
+
+.header-logo {
+  color: var(--text);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .header-logo {
+    filter: brightness(0.22);
+  }
+}
+
+[data-theme="light"] .header-logo {
+  filter: brightness(0.22);
+}
+
+[data-theme="dark"] .header-logo {
+  filter: none;
+}
+
+.theme-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.theme-toggle:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.theme-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-icon--sun { display: flex; }
+.theme-toggle-icon--moon { display: none; }
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .theme-toggle-icon--sun { display: none; }
+  :root:not([data-theme]) .theme-toggle-icon--moon { display: flex; }
+}
+
+[data-theme="light"] .theme-toggle-icon--sun { display: none; }
+[data-theme="light"] .theme-toggle-icon--moon { display: flex; }
+
+[data-theme="dark"] .theme-toggle-icon--sun { display: flex; }
+[data-theme="dark"] .theme-toggle-icon--moon { display: none; }
 
 /* Tab Bar */
 .tab-bar {
@@ -277,7 +435,7 @@ body {
   border-radius: 4px;
   font-size: 0.7rem;
   font-weight: 600;
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--badge-self-bg);
   color: var(--accent);
 }
 
@@ -329,7 +487,7 @@ body {
   max-width: 320px;
   max-height: 180px;
   overflow-y: auto;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.4);
+  box-shadow: var(--shadow-pop);
 }
 
 .tip-wrap:hover .tip-pop,
@@ -448,10 +606,10 @@ body {
   font-weight: 600;
 }
 
-.placement-table .exp-badge.expert { background: rgba(34, 197, 94, 0.2); color: var(--expert); }
-.placement-table .exp-badge.intermediate { background: rgba(234, 179, 8, 0.2); color: var(--intermediate); }
-.placement-table .exp-badge.novice { background: rgba(6, 182, 212, 0.2); color: var(--novice); }
-.placement-table .exp-badge.unknown { background: rgba(140, 140, 150, 0.2); color: var(--text-muted); }
+.placement-table .exp-badge.expert { background: var(--badge-expert-bg); color: var(--expert); }
+.placement-table .exp-badge.intermediate { background: var(--badge-intermediate-bg); color: var(--intermediate); }
+.placement-table .exp-badge.novice { background: var(--badge-novice-bg); color: var(--novice); }
+.placement-table .exp-badge.unknown { background: var(--badge-unknown-bg); color: var(--text-muted); }
 
 .placement-table .summary-cell {
   max-width: 280px;
@@ -482,7 +640,7 @@ body {
 }
 
 .stat-card.risk .value {
-  color: #ef4444;
+  color: var(--risk);
 }
 
 .badge-yes {
@@ -527,7 +685,7 @@ body {
 /* Gold divider after #2 Tenure (separates "who's your #2" from "MIT / pipeline" questions) */
 .succession-table th.gold-divider,
 .succession-table td.gold-divider {
-  border-left: 3px solid #eab308;
+  border-left: 3px solid var(--gold-divider);
   padding-left: 1rem;
 }
 
@@ -549,6 +707,11 @@ body {
   .header h1 {
     font-size: 1.1rem;
     line-height: 1.3;
+  }
+
+  .theme-toggle {
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   /* Stat cards: 2 columns, tighter */
